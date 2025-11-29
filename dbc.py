@@ -35,8 +35,8 @@ class CSV(object):
         bytes_string = bytes()
         string_index_dict = {}
         for string in sorted(string_set):
+            string_index_dict[string] = len(bytes_string)
             bytes_string += string.encode('utf-8') + b'\x00'
-            string_index_dict[string] = len(bytes_string) - 1
         return {
             "string_index_dict": string_index_dict,
             "bytes_string": bytes_string
@@ -180,15 +180,15 @@ class DBC(object):
 
 
 def dbc2csv():
-    dbc = DBC("./data/dbc/Spell.dbc", "./schemas/azerothcore/spell.json")
-    # dbc = DBC("./spell.dbc", "./schemas/azerothcore/spell.json")
+    # dbc = DBC("./data/dbc/Spell.dbc", "./schemas/azerothcore/spell.json")
+    dbc = DBC("./ftp/Spell.dbc", "./schemas/azerothcore/spell.json")
     # l = dbc.dbc2list()
-    dbc.dbc2csv("spell.csv")
+    dbc.dbc2csv("./ftp/spell.csv")
 
 
 def csv2dbc():
-    csv = CSV("./spell.csv", "./schemas/azerothcore/spell.json")
-    csv.csv2dbc("./spell.db")
+    csv = CSV("./ftp/spell.csv", "./schemas/azerothcore/spell.json")
+    csv.csv2dbc("./ftp/Spell.dbc")
 
 
 if __name__ == "__main__":

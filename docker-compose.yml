@@ -2,7 +2,7 @@ services:
   ftp-server:
     container_name: ftp-server
     environment:
-      - PUBLIC_IP=192.168.31.80
+      - PUBLIC_IP=192.168.31.28
       - FTP_PASS=123
       - FTP_USER=user
     image: garethflowers/ftp-server
@@ -10,4 +10,4 @@ services:
       - "20-21:20-21/tcp"
       - "40000-40009:40000-40009/tcp" # For passive mode
     volumes:
-      - "./:/home/user"
+      - "./ftp:/home/user"
