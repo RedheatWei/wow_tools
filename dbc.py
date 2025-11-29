@@ -7,18 +7,6 @@ import csv
 import struct
 
 
-def parse_string_block(block):
-    strings = {}
-    current_string = []
-    for index, i in enumerate(block):
-        if i == 0:
-            strings[index - len(current_string)] = bytes(current_string).decode('utf-8')
-            current_string = []
-        else:
-            current_string.append(i)
-    return strings
-
-
 class CSV(object):
     def __init__(self, csv_file, schema_file):
         with open(schema_file, "r") as f:
@@ -46,38 +34,44 @@ class CSV(object):
         # 生成 string block
         bytes_string = bytes()
         string_index_dict = {}
-        for string in string_set:
+        for string in sorted(string_set):
             bytes_string += string.encode('utf-8') + b'\x00'
-            string_index_dict[string] = len(bytes_string)
+            string_index_dict[string] = len(bytes_string) - 1
         return {
             "string_index_dict": string_index_dict,
             "bytes_string": bytes_string
         }
 
     def _build_record_block(self, string_index_dict):
-        bytes_record = bytes()
-        bytes_record_size = 20
-        for row in self.csv_content:
-            for k, v in row.items():
-                if self.schema[k] != 'byte':
-                    bytes_record_size += 4
-                else:
-                    bytes_record_size += 1
+        bytes_record_size = 20 + (len(self.csv_content) * len(self.csv_content[0].keys()) * 4)
+        bytes_record = bytearray(bytes_record_size - 20)
 
+        def pack_uint(value):
+            return struct.pack('<I', int(value))
+
+        def pack_float(value):
+            return struct.pack('<f', float(value))
+
+        def pack_string(value):
+            return struct.pack('<i', int(string_index_dict[value]))
+
+        # def pack_default(value):
+        #     return struct.pack('<i', int(value))
+
+        type_encoders = {
+            'uint': pack_uint,
+            'int': pack_uint,
+            'float': pack_float,
+            'string': pack_string,
+            # 'default': pack_default
+        }
+
+        index = 0
         for row in self.csv_content:
             for k, v in row.items():
-                if self.schema[k] == 'int':
-                    bytes_record += struct.pack('<i', int(v))
-                elif self.schema[k] == 'uint':
-                    bytes_record += struct.pack('<I', int(v, 16))
-                elif self.schema[k] == 'float':
-                    bytes_record += struct.pack('<f', float(v))
-                elif self.schema[k] == 'byte':
-                    bytes_record += struct.pack('b', int(v))
-                elif self.schema[k] == 'string':
-                    bytes_record += struct.pack('<i', int(string_index_dict[v] + bytes_record_size))
-                else:
-                    bytes_record += struct.pack('<i', int(v))
+                bytes_record[index:index + 4] = type_encoders[self.schema[k]](v)
+                index += 4
+
         return bytes_record
 
     def csv2dbc(self, filename):
@@ -86,13 +80,14 @@ class CSV(object):
         string_index_dict = string_info["string_index_dict"]
 
         bytes_record = self._build_record_block(string_index_dict)
-
-        bytes_dbc = bytes()
-        bytes_dbc += struct.pack('<I', "WDBC".encode('utf-8'))
-        bytes_dbc += struct.pack('<I', len(self.csv_content))
-        bytes_dbc += struct.pack('<I', len(self.schema.keys()))
-        bytes_dbc += struct.pack('<I', len(bytes_record))
-        bytes_dbc += struct.pack('<I', len(bytes_string))
+        bytes_dbc = bytearray(20 + len(bytes_record) + len(bytes_string))
+        bytes_dbc[:4] = struct.pack('<I', int(1128416343))
+        bytes_dbc[4:8] = struct.pack('<I', len(self.csv_content))
+        bytes_dbc[8:12] = struct.pack('<I', len(self.schema.keys()))
+        bytes_dbc[12:16] = struct.pack('<I', int(len(bytes_record) / len(self.csv_content)))
+        bytes_dbc[16:20] = struct.pack('<I', len(bytes_string))
+        bytes_dbc[20:20 + len(bytes_record)] = bytes_record
+        bytes_dbc[20 + len(bytes_record):] = bytes_string
         with open(filename, "wb") as f:
             f.write(bytes_dbc)
 
@@ -104,9 +99,21 @@ class DBC(object):
         with open(schema_file, "r") as f:
             self.schema = json.load(f)
 
+    @staticmethod
+    def _parse_string_block(block):
+        strings = {}
+        current_string = bytearray()
+        point = 0
+        for i in block:
+            if i == 0:
+                strings[point-len(current_string)] = current_string.decode('utf-8')
+                current_string = bytearray()
+            else:
+                current_string.append(i)
+            point += 1
+        return strings
+
     def _dbc2struct(self):
-        if self.buffer[:4].decode("utf-8") != "WDBC":
-            raise TypeError
         if struct.unpack('<I', self.buffer[:4])[0] != 1128416343:
             raise TypeError
         record_count = struct.unpack('<I', self.buffer[4:8])[0]
@@ -116,7 +123,7 @@ class DBC(object):
         string_block_size = struct.unpack('<I', self.buffer[16:20])[0]
         string_block_start_index = len(self.buffer) - string_block_size
         string_block = self.buffer[string_block_start_index:]
-        string_list = parse_string_block(string_block)
+        string_list = self._parse_string_block(string_block)
         # record block
         record_block = self.buffer[20:string_block_start_index]
         record_list = [record_block[i * record_size:(i + 1) * record_size] for i in range(record_count)]
@@ -129,30 +136,30 @@ class DBC(object):
         }
 
     def _record2dict(self, record, string_list):
-        point = 0
         row = {}
-        for index, key in enumerate(self.schema):
-            col_type = key.get("type", 'int')
-            col_name = key.get("name", f'field_{index + 1}')
-            if point + 4 > len(record):
-                break
 
-            if col_type == 'int':
-                value = struct.unpack('<i', record[point:point + 4])[0]
-            elif col_type == 'uint':
-                value = struct.unpack('<I', record[point:point + 4])[0]
-                value = hex(value)
-            elif col_type == 'float':
-                value = struct.unpack('<f', record[point:point + 4])[0]
-            elif col_type == 'byte':
-                value = struct.unpack('b', record[point:point + 1])[0]
-            elif col_type == 'string':
-                string_index = struct.unpack('<i', record[point:point + 4])[0]
-                value = string_list[string_index]
-            else:
-                value = struct.unpack('<i', record[point:point + 4])[0]
-            if col_type not in ['byte', 'null', 'localization']:
-                point += 4
+        def upack_uint(data):
+            return struct.unpack('<I', data)[0]
+
+        def upack_float(data):
+            return struct.unpack('<f', data)[0]
+
+        def unpack_string(data):
+            return string_list[struct.unpack('<i', data)[0]]
+
+        type_handlers = {
+            'uint': upack_uint,
+            'int': upack_uint,
+            'float': upack_float,
+            'string': unpack_string,
+            # 'default': lambda data: struct.unpack('<i', data)[0]
+        }
+        point = 0
+        for index, key in enumerate(self.schema):
+            col_type = key.get("type")
+            col_name = key.get("name", f'field_{index + 1}')
+            value = type_handlers[col_type](record[point:point + 4])
+            point += 4
             row[col_name] = str(value)
         return row
 
@@ -166,16 +173,24 @@ class DBC(object):
 
     def dbc2csv(self, filename):
         dbc_list = self.dbc2list()
-        with open(filename, 'w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=list(dbc_list[0].keys()), delimiter=',',
-                                    quotechar='"', quoting=csv.QUOTE_ALL)
+        with open(filename, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=list(dbc_list[0].keys()), delimiter=',')
             writer.writeheader()
             writer.writerows(dbc_list)
 
 
-if __name__ == "__main__":
-    # dbc = DBC("./data/dbc/Spell.dbc", "./schemas/azerothcore/spell.json")
+def dbc2csv():
+    dbc = DBC("./data/dbc/Spell.dbc", "./schemas/azerothcore/spell.json")
+    # dbc = DBC("./spell.dbc", "./schemas/azerothcore/spell.json")
     # l = dbc.dbc2list()
-    # dbc.dbc2csv("spell.csv")
+    dbc.dbc2csv("spell.csv")
+
+
+def csv2dbc():
     csv = CSV("./spell.csv", "./schemas/azerothcore/spell.json")
-    csv.csv2dbc("./spell.dbc")
+    csv.csv2dbc("./spell.db")
+
+
+if __name__ == "__main__":
+    # dbc2csv()
+    csv2dbc()
