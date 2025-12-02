@@ -7,6 +7,16 @@ import csv
 import struct
 
 
+def dict_to_insert_sql(table_name, data_dict):
+    # 处理列名和值
+    columns = ', '.join(data_dict.keys())
+    values = ', '.join([f"'{value}'" if isinstance(value, str) else str(value)
+                        for value in data_dict.values()])
+
+    sql = f"replace INTO {table_name} ({columns}) VALUES ({values});"
+    return sql
+
+
 class CSV(object):
     def __init__(self, csv_file, schema_file):
         with open(schema_file, "r") as f:
@@ -106,7 +116,7 @@ class DBC(object):
         point = 0
         for i in block:
             if i == 0:
-                strings[point-len(current_string)] = current_string.decode('utf-8')
+                strings[point - len(current_string)] = current_string.decode('utf-8')
                 current_string = bytearray()
             else:
                 current_string.append(i)
@@ -180,17 +190,28 @@ class DBC(object):
 
 
 def dbc2csv():
-    # dbc = DBC("./data/dbc/Spell.dbc", "./schemas/azerothcore/spell.json")
-    dbc = DBC("./ftp/Spell.dbc", "./schemas/azerothcore/spell.json")
+    dbc = DBC("./data/dbc/SpellCategory.dbc", "./schemas/azerothcore/spellcategory.json")
+    # dbc = DBC("../ftp/data/Spell.dbc", "py_dbc_reader/schemas/azerothcore/spell.json")
     # l = dbc.dbc2list()
-    dbc.dbc2csv("./ftp/spell.csv")
+    dbc.dbc2csv("../ftp/data/spellcategory.csv")
 
 
 def csv2dbc():
-    csv = CSV("./ftp/spell.csv", "./schemas/azerothcore/spell.json")
+    csv = CSV("../ftp/data/spell.csv", "py_dbc_reader/schemas/azerothcore/spell.json")
     csv.csv2dbc("./ftp/Spell.dbc")
 
 
+def get_spell(spell_id):
+    dbc = DBC("../ftp/data/Spell.dbc", "py_dbc_reader/schemas/azerothcore/spell.json")
+    d = dbc.dbc2list()
+    for i in d:
+        if i["ID"] == str(spell_id):
+            print(i)
+            sql = dict_to_insert_sql("spell_dbc", i)
+            print(sql)
+
+
 if __name__ == "__main__":
-    # dbc2csv()
-    csv2dbc()
+    dbc2csv()
+    # csv2dbc()
+    # get_spell(50842)

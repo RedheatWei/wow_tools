@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36" version="29.1.1">
+  <diagram name="第 1 页" id="VqR5HOWcP05YdbicOSUR">
+    <mxGraphModel dx="976" dy="633" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="WDBC" vertex="1">
+          <mxGeometry height="40" width="70" x="100" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="记录数" vertex="1">
+          <mxGeometry height="40" width="70" x="170" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="字段数" vertex="1">
+          <mxGeometry height="40" width="70" x="240" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="记录大小" vertex="1">
+          <mxGeometry height="40" width="70" x="310" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="string block size" vertex="1">
+          <mxGeometry height="40" width="70" x="380" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="record block" vertex="1">
+          <mxGeometry height="40" width="170" x="450" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="0～3" vertex="1">
+          <mxGeometry height="30" width="60" x="105" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-8" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="4～7" vertex="1">
+          <mxGeometry height="30" width="60" x="175" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="8～11" vertex="1">
+          <mxGeometry height="30" width="60" x="245" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="12～15" vertex="1">
+          <mxGeometry height="30" width="60" x="315" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-11" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="16～19" vertex="1">
+          <mxGeometry height="30" width="60" x="385" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kT_Xb-0DG2yacYzhkZei-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="可变长string block" vertex="1">
+          <mxGeometry height="40" width="140" x="620" y="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
