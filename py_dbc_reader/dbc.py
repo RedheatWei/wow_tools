@@ -183,17 +183,17 @@ class DBC(object):
 
     def dbc2csv(self, filename):
         dbc_list = self.dbc2list()
-        with open(filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=list(dbc_list[0].keys()), delimiter=',')
+        with open(filename, 'w',encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=list(dbc_list[0].keys()), delimiter=',',dialect='unix')
             writer.writeheader()
             writer.writerows(dbc_list)
 
 
 def dbc2csv():
-    dbc = DBC("./data/dbc/SpellCategory.dbc", "./schemas/azerothcore/spellcategory.json")
-    # dbc = DBC("../ftp/data/Spell.dbc", "py_dbc_reader/schemas/azerothcore/spell.json")
+    # dbc = DBC("./data/dbc/SpellCategory.dbc", "./schemas/azerothcore/spellcategory.json")
+    dbc = DBC("./data/Spell.dbc", "./schemas/azerothcore/spell.json")
     # l = dbc.dbc2list()
-    dbc.dbc2csv("../ftp/data/spellcategory.csv")
+    dbc.dbc2csv("../ftp/data/spell.csv")
 
 
 def csv2dbc():
